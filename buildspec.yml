@@ -2,19 +2,19 @@ version: 0.2
 
 phases:
   install:
+    runtime-versions:
+      python: 3.8
     commands:
-      - echo Installing dependencies...
-      - npm install
+      - pip install -r requirements.txt
   build:
     commands:
-      - echo Building the project...
-      - npm run build
+      - echo "Entrenando modelo..."
+      - python train.py
   post_build:
     commands:
-      - echo Running tests...
-      - npm test
+      - echo "Modelo y transformador generados exitosamente."
 
 artifacts:
   files:
-    - dist/**/*
-    - coverage/**/*
+    - model.pkl
+    - transformer.pkl

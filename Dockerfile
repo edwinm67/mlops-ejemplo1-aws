@@ -1,7 +1,8 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
-COPY requirements.txt .
+FROM public.ecr.aws/lambda/python:3.8
+
+COPY model.pkl transformer.pkl lambda_function.py ./
+COPY requirements.txt ./
+
 RUN pip install -r requirements.txt
-COPY ./api api/
-COPY ./outputs outputs/
-EXPOSE 8080
-CMD ["uvicorn", "api.api:app", "--host", "0.0.0.0", "--port", "8080"]
+
+CMD ["lambda_function.lambda_handler"]
