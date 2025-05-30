@@ -23,3 +23,23 @@ aws cloudformation deploy \
   --stack-name codebuild-ml-model-stack \
   --parameter-overrides ArtifactBucket=tu-bucket CodeRepo=https://github.com/tuusuario/tu-repo.git BranchName=main \
   --capabilities CAPABILITY_NAMED_IAM
+
+
+
+# permisos IAM:
+
+Agregar permisos manualmente desde la consola
+Ve a IAM > Roles en la consola de AWS.
+
+Busca el rol asociado a CodeBuild, por ejemplo:
+MyCodeBuildRole 
+
+Haz clic en "Agregar permisos" > "Adjuntar políticas".
+
+Busca y selecciona:
+
+AmazonEC2ContainerRegistryPowerUser
+
+Guarda.
+
+
