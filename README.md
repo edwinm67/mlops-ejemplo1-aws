@@ -38,7 +38,8 @@ Haz clic en "Agregar permisos" > "Adjuntar políticas".
 
 Busca y selecciona:
 
-AmazonEC2ContainerRegistryPowerUser
++AmazonEC2ContainerRegistryPowerUser
++AmazonEC2ContainerRegistryFullAccess
 
 Guarda.
 
