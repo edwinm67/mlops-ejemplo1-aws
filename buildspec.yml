@@ -32,7 +32,7 @@ phases:
       - echo Entrenando modelo...
       - python train.py
       - echo Construyendo imagen Docker...
-      - docker build -t $IMAGE_REPO_NAME .
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
 
   post_build:
