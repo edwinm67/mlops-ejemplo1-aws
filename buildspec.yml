@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - echo "Entrenando modelo..."
-      - python train.py
+      - python src/train.py
   post_build:
     commands:
       - echo "Modelo y transformador generados exitosamente."
