@@ -56,6 +56,17 @@ phases:
         else
           echo "Creating new Lambda function"
           aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --package-type Image --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole  --timeout 30 --memory-size 512 --region $AWS_DEFAULT_REGION
+          echo Esperando a que la función Lambda esté activa...
+          for i in {{1..10}}; do
+            STATUS=$(aws lambda get-function-configuration --function-name $LAMBDA_FUNCTION_NAME --query 'State' --output text --region $AWS_DEFAULT_REGION)
+            echo "Estado actual: $STATUS"
+            if [ "$STATUS" == "Active" ]; then
+              echo "Lambda lista."
+              break
+            fi
+            echo "Esperando 2 segundos..."
+            sleep 2
+          done
         fi
       - echo Despliegue finalizado correctamente.
 

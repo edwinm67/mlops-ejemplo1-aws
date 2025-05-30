@@ -45,3 +45,19 @@ Busca y selecciona:
 Guarda.
 
 
+Debes asegurarte que el rol MyLambdaExecutionRole tenga la siguiente política de "trust relationship":
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+
+
+
