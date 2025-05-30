@@ -40,6 +40,7 @@ Busca y selecciona:
 
 +AmazonEC2ContainerRegistryPowerUser
 +AmazonEC2ContainerRegistryFullAccess
++AWSLambda_FullAccess
 
 Guarda.
 
