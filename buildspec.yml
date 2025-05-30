@@ -10,15 +10,10 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - echo default region 
-      - echo $AWS_DEFAULT_REGION
-      - aws --version
-      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - echo ACCOUNT_ID
-      - echo $ACCOUNT_ID
-      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
-      - echo Repository URI:$REPOSITORY_URI
+      - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - export REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - echo Repository URI: $REPOSITORY_URI
   build:
     commands:
       - echo Building the Docker image...
