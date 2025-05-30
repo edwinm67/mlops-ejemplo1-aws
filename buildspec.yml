@@ -16,6 +16,8 @@ phases:
       - echo Repository URI:$REPOSITORY_URI
   build:
     commands:
+      - echo "Entrenando modelo..."
+      - python src/train.py
       - echo Building the Docker image...
       - ls -lh ./outputs
       - docker build -t $IMAGE_REPO_NAME .
