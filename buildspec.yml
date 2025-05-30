@@ -38,30 +38,24 @@ phases:
       - python train.py
       - echo Construyendo imagen Docker...
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
- 
+      - echo Etiquetando imagen para ECR...
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+      - docker images
+
   post_build:
     commands:
       - echo Subiendo imagen a ECR...
-      - docker images
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Desplegando función Lambda...
       - |
-        if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME; then
-          echo "Actualizando función Lambda existente"
-          aws lambda update-function-code             --function-name $LAMBDA_FUNCTION_NAME             --image-uri $REPOSITORY_URI:$IMAGE_TAG
+        if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME --region $AWS_DEFAULT_REGION; then
+          echo "Actualizando función Lambda existente..."
+          aws lambda update-function-code             --function-name $LAMBDA_FUNCTION_NAME             --image-uri $REPOSITORY_URI:$IMAGE_TAG             --region $AWS_DEFAULT_REGION
         else
-          echo "Creando nueva función Lambda"
-          aws lambda create-function             --function-name $LAMBDA_FUNCTION_NAME             --package-type Image             --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG             --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole             --timeout 30             --memory-size 512
+          echo "Creando nueva función Lambda..."
+          aws lambda create-function             --function-name $LAMBDA_FUNCTION_NAME             --package-type Image             --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG             --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole             --timeout 30             --memory-size 512             --region $AWS_DEFAULT_REGION
         fi
-      - echo Desplegando API Gateway...
-      - |
-        API_ID=$(aws apigateway create-rest-api --name $API_NAME --region $AWS_DEFAULT_REGION --query 'id' --output text)
-        PARENT_ID=$(aws apigateway get-resources --rest-api-id $API_ID --region $AWS_DEFAULT_REGION --query 'items[0].id' --output text)
-        RESOURCE_ID=$(aws apigateway create-resource --rest-api-id $API_ID --parent-id $PARENT_ID --path-part predict --region $AWS_DEFAULT_REGION --query 'id' --output text)
-        aws apigateway put-method --rest-api-id $API_ID --resource-id $RESOURCE_ID --http-method POST --authorization-type "NONE" --region $AWS_DEFAULT_REGION
-        aws apigateway put-integration --rest-api-id $API_ID --resource-id $RESOURCE_ID --http-method POST --type AWS_PROXY --integration-http-method POST --uri arn:aws:apigateway:$AWS_DEFAULT_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:$AWS_DEFAULT_REGION:$ACCOUNT_ID:function:$LAMBDA_FUNCTION_NAME/invocations --region $AWS_DEFAULT_REGION
-        aws lambda add-permission --function-name $LAMBDA_FUNCTION_NAME --statement-id apigateway-test-2 --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn arn:aws:execute-api:$AWS_DEFAULT_REGION:$ACCOUNT_ID:$API_ID/*/POST/predict --region $AWS_DEFAULT_REGION
-        aws apigateway create-deployment --rest-api-id $API_ID --stage-name $STAGE_NAME --region $AWS_DEFAULT_REGION
+      - echo Despliegue finalizado correctamente.
 
 artifacts:
   files:
