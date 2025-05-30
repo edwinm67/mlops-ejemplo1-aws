@@ -4,11 +4,10 @@ env:
   variables:
     IMAGE_REPO_NAME: "ml-model-lambda"
     IMAGE_TAG: "latest"
-    AWS_DEFAULT_REGION: "us-east-1"
-
     LAMBDA_FUNCTION_NAME: "MLModelLambda"
     API_NAME: "MLModelAPI"
     STAGE_NAME: "prod"
+    AWS_DEFAULT_REGION: "us-east-1"
 
 phases:
   install:
@@ -16,42 +15,40 @@ phases:
       python: 3.8
     commands:
       - pip install -r requirements.txt
+
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Configurando entorno AWS...
       - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - export REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Verificando si el repositorio ECR existe...
+      - |
+        aws ecr describe-repositories --repository-names $IMAGE_REPO_NAME --region $AWS_DEFAULT_REGION ||         aws ecr create-repository --repository-name $IMAGE_REPO_NAME --region $AWS_DEFAULT_REGION
+      - echo Autenticándose en Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - aws ecr create-repository --repository-name $IMAGE_REPO_NAME --region $AWS_DEFAULT_REGION
-      - echo Repository URI:$REPOSITORY_URI
 
   build:
     commands:
-      - echo "Entrenando modelo..."
-      - python src/train.py
-      - echo Building the Docker image...
-      - ls -lh ./outputs
+      - echo Entrenando modelo...
+      - python train.py
+      - echo Construyendo imagen Docker...
       - docker build -t $IMAGE_REPO_NAME .
-      - echo Tagging the image...
-      - export IMAGE_FULL_NAME=$REPOSITORY_URI:$IMAGE_TAG
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+
   post_build:
     commands:
-      - echo Pushing the Docker image to ECR...
+      - echo Publicando imagen en Amazon ECR...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Build completed on `date`
-
-
-      - echo Deploying Lambda function...
+      - echo Desplegando función Lambda...
       - |
         if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME; then
-          echo "Updating existing Lambda function"
+          echo "Actualizando función Lambda existente"
           aws lambda update-function-code             --function-name $LAMBDA_FUNCTION_NAME             --image-uri $REPOSITORY_URI:$IMAGE_TAG
         else
-          echo "Creating new Lambda function"
+          echo "Creando nueva función Lambda"
           aws lambda create-function             --function-name $LAMBDA_FUNCTION_NAME             --package-type Image             --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG             --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole             --timeout 30             --memory-size 512
         fi
-      - echo Deploying API Gateway...
+      - echo Desplegando API Gateway...
       - |
         API_ID=$(aws apigateway create-rest-api --name $API_NAME --region $AWS_DEFAULT_REGION --query 'id' --output text)
         PARENT_ID=$(aws apigateway get-resources --rest-api-id $API_ID --region $AWS_DEFAULT_REGION --query 'items[0].id' --output text)
@@ -60,7 +57,6 @@ phases:
         aws apigateway put-integration --rest-api-id $API_ID --resource-id $RESOURCE_ID --http-method POST --type AWS_PROXY --integration-http-method POST --uri arn:aws:apigateway:$AWS_DEFAULT_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:$AWS_DEFAULT_REGION:$ACCOUNT_ID:function:$LAMBDA_FUNCTION_NAME/invocations --region $AWS_DEFAULT_REGION
         aws lambda add-permission --function-name $LAMBDA_FUNCTION_NAME --statement-id apigateway-test-2 --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn arn:aws:execute-api:$AWS_DEFAULT_REGION:$ACCOUNT_ID:$API_ID/*/POST/predict --region $AWS_DEFAULT_REGION
         aws apigateway create-deployment --rest-api-id $API_ID --stage-name $STAGE_NAME --region $AWS_DEFAULT_REGION
-
 
 artifacts:
   files:
