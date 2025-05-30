@@ -49,25 +49,15 @@ phases:
       - echo Subiendo imagen a ECR...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Desplegando función Lambda...
-      - |
-        echo "Verificando existencia de función Lambda..."
-        if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME --region $AWS_DEFAULT_REGION > /dev/null 2>&1; then
-          echo "Actualizando función Lambda existente..."
-          aws lambda update-function-code \
-            --function-name $LAMBDA_FUNCTION_NAME \
-            --image-uri $REPOSITORY_URI:$IMAGE_TAG \
-            --region $AWS_DEFAULT_REGION || exit 1
-        else
-          echo "Creando nueva función Lambda..."
-          aws lambda create-function \
-            --function-name $LAMBDA_FUNCTION_NAME \
-            --package-type Image \
-            --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG \
-            --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole \
-            --timeout 30 \
-            --memory-size 512 \
-            --region $AWS_DEFAULT_REGION || exit 1
-        fi
+      - echo "Creando nueva función Lambda..."
+      -  aws lambda create-function \
+          --function-name $LAMBDA_FUNCTION_NAME \
+          --package-type Image \
+          --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG \
+          --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole \
+          --timeout 30 \
+          --memory-size 512 \
+          --region $AWS_DEFAULT_REGION
       - echo Despliegue finalizado correctamente.
 
 artifacts:
