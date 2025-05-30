@@ -32,11 +32,11 @@ phases:
       - python train.py
       - echo Construyendo imagen Docker...
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
-
+ 
   post_build:
     commands:
-      - echo Publicando imagen en Amazon ECR...
+      - echo Subiendo imagen a ECR...
+      - docker images
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Desplegando función Lambda...
       - |
