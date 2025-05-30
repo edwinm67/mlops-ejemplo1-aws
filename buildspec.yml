@@ -55,7 +55,7 @@ phases:
           aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --image-uri $REPOSITORY_URI:$IMAGE_TAG
         else
           echo "Creating new Lambda function"
-          aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --package-type Image --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG --role arn:aws:iam::$ACCOUNT_ID:role/MyLambdaExecutionRole  --timeout 30 --memory-size 512 --region $AWS_DEFAULT_REGION
+          aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --package-type Image --code ImageUri=$REPOSITORY_URI:$IMAGE_TAG --role arn:aws:iam::$ACCOUNT_ID:role/MyCodeBuildRole  --timeout 30 --memory-size 512 --region $AWS_DEFAULT_REGION
         fi
       - echo Despliegue finalizado correctamente.
 
