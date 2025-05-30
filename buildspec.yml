@@ -38,7 +38,7 @@ phases:
   post_build:
     commands:
       - echo Publicando imagen en Amazon ECR...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI
       - echo Desplegando función Lambda...
       - |
         if aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME; then
