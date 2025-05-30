@@ -1,20 +1,31 @@
 version: 0.2
 
+env:
+  variables:
+    IMAGE_REPO_NAME: "ml-model-lambda"
+    IMAGE_TAG: "latest"
+    AWS_DEFAULT_REGION: "us-east-1"  # Cambia esto si usas otra región
+
 phases:
-  install:
-    runtime-versions:
-      python: 3.8
+  pre_build:
     commands:
-      - pip install -r requirements.txt
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Repository URI: $REPOSITORY_URI
   build:
     commands:
-      - echo "Entrenando modelo..."
-      - python src/train.py
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo "Modelo y transformador generados exitosamente."
+      - echo Pushing the Docker image to ECR...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Build completed on `date`
 
 artifacts:
   files:
-    - model.pkl
-    - transformer.pkl
+    - '**/*'

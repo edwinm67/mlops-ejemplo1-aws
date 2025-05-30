@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Plantilla para crear un repositorio Amazon ECR para desplegar imágenes Docker de modelos ML
+
+Resources:
+  MLECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: ml-model-lambda
+      ImageScanningConfiguration:
+        scanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Eliminar imágenes no etiquetadas después de 14 días",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 14
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+Outputs:
+  RepositoryUri:
+    Description: URI del repositorio ECR
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ml-model-lambda"
