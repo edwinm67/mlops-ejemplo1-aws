@@ -10,8 +10,12 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
+      - echo default region 
+      - echo $AWS_DEFAULT_REGION
       - aws --version
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - echo ACCOUNT_ID
+      - echo $ACCOUNT_ID
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - echo Repository URI:$REPOSITORY_URI
